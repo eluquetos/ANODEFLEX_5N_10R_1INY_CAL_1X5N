@@ -41,6 +41,7 @@ assert.ok(html.includes("La aplicación obtiene el voltaje mínimo y los reósta
 const worker=fs.readFileSync(path.join(root,"sw.js"),"utf8");
 assert.ok(worker.includes('fetch(event.request).then'),"la aplicación debe buscar primero la versión publicada");
 assert.ok(worker.includes('client.navigate(client.url)'),"una actualización debe recargar las pestañas abiertas");
+for(const file of ["styles.css","model.js","app.js"])assert.ok(html.includes(`${file}?v=4`),`${file} debe evitar versiones antiguas almacenadas`);
 const manifest=JSON.parse(fs.readFileSync(path.join(root,"manifest.webmanifest"),"utf8"));
 assert.equal(manifest.display,"standalone");
 assert.equal(manifest.start_url,"./");
