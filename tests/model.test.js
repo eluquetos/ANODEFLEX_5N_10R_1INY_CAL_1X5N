@@ -20,10 +20,16 @@ assert.notEqual(revised.fixed[11],nominal.fixed[11],"un nuevo voltaje o corrient
 const revisedOperating=model.simulate({V:26,...cables,fixed:revised.fixed,rheostats:zeroReostats});
 for(const id of model.IDS)assert.ok(Math.abs(revisedOperating.currents[id]-revisedCurrents[id])<1e-12,`corriente recalculada ${id}`);
 const targets={11:1,12:.8,21:.7,22:.7,31:.6,32:.5,41:.4,42:.3,51:.3,52:.2};
-const adjustment=model.adjust({V:24,...cables,fixed:nominal.fixed,targets,maxReo:100});
+const adjustment=model.adjust({...cables,fixed:nominal.fixed,targets,maxReo:100});
 assert.equal(adjustment.feasible,true);
-const adjusted=model.simulate({V:24,...cables,fixed:nominal.fixed,rheostats:adjustment.rheostats});
+assert.ok(adjustment.V<24,"el ajuste debe reducir la tensión sobrante");
+assert.ok(adjustment.zero.length>=1,"al menos un reóstato debe quedar en cero");
+assert.equal(Math.min(...Object.values(adjustment.rheostats)),0);
+const adjusted=model.simulate({V:adjustment.V,...cables,fixed:nominal.fixed,rheostats:adjustment.rheostats});
 for(const id of model.IDS)assert.ok(Math.abs(adjusted.currents[id]-targets[id])<1e-12,`objetivo ${id}`);
+const nominalAdjustment=model.adjust({...cables,fixed:nominal.fixed,targets:currents,maxReo:100});
+assert.ok(Math.abs(nominalAdjustment.V-24)<1e-12);
+for(const id of model.IDS)assert.equal(nominalAdjustment.rheostats[id],0,`reóstato nominal ${id}`);
 const increased={...zeroReostats,11:10};
 const throttled=model.simulate({V:24,...cables,fixed:nominal.fixed,rheostats:increased});
 assert.ok(throttled.currents["11"]<operating.currents["11"],"al aumentar Reo11 debe disminuir I11");

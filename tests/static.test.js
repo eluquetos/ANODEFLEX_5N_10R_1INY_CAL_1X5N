@@ -27,6 +27,7 @@ assert.ok(!app.includes("Corriente objetivo"));
 assert.ok(!app.includes("Potencia del reóstato"));
 assert.ok(app.includes('addEventListener("click",computeFixed)'),"el botón debe recalcular directamente");
 assert.ok(app.includes("setRheostat(id,0)"),"el recálculo debe reiniciar los reóstatos");
+assert.ok(app.includes('$("live-v").value=result.V'),"el ajuste asistido debe aplicar la tensión mínima");
 assert.ok(!app.includes("showModal"),"el recálculo no debe depender de una confirmación adicional");
 assert.ok(!html.includes('id="confirm-dialog"'),"el diálogo anterior debe eliminarse");
 assert.ok(html.includes('class="measurement-card side-single"'),"las mediciones deben usar la tarjeta técnica");

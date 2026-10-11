@@ -75,14 +75,13 @@ function setRheostat(id,value){$("reo-"+id).value=Math.round(Math.max(0,value)*1
 
 function assistedAdjustment(){
   if(!state.fixed){showMessage("Calibre primero las resistencias del sistema.","error");return}
-  const targets=Object.fromEntries(ids.map(id=>[id,n("target-"+id)])),V=n("live-v"),maxReo=n("reo-max");
+  const targets=Object.fromEntries(ids.map(id=>[id,n("target-"+id)])),maxReo=n("reo-max");
   if(!Object.values(targets).every(value=>Number.isFinite(value)&&value>0)||!Number.isFinite(maxReo)||maxReo<=0){showMessage("Las diez corrientes objetivo y el reóstato máximo deben ser mayores que cero.","error");return}
   let result;
-  try{result=AnodeflexModel.adjust({V,...cableArgs(state.nominal.cables),fixed:state.fixed,targets,maxReo})}
+  try{result=AnodeflexModel.adjust({...cableArgs(state.nominal.cables),fixed:state.fixed,targets,maxReo})}
   catch{showMessage("No se pudo calcular el ajuste con los datos ingresados.","error");return}
-  if(result.reason==="voltage"){showMessage("Los objetivos consumen más tensión de la disponible considerando Rc1 a Rc5.","error");return}
   if(!result.feasible){const parts=[];if(result.negative.length)parts.push("Ramas "+result.negative.join(", ")+": requieren reducir la resistencia del sistema o aumentar la tensión");if(result.over.length)parts.push("Ramas "+result.over.join(", ")+": superan el máximo de "+fmt(maxReo,2)+" Ω");showMessage("Ajuste no alcanzable. "+parts.join(". ")+".","error");return}
-  ids.forEach(id=>setRheostat(id,result.rheostats[id]));solve();showMessage("Ajuste calculado. "+nodeText(result.voltages)+".","success");
+  $("live-v").value=result.V;ids.forEach(id=>setRheostat(id,result.rheostats[id]));solve();showMessage("Ajuste calculado con la tensión mínima de "+fmt(result.V,2)+" V. Reóstato en 0 Ω: "+result.zero.join(", ")+".","success");
 }
 
 function caseData(){return {format:"anodeflex-5-nodes-case",version:1,createdAt:new Date().toISOString(),calibration:{V:state.nominal.V,cables:state.nominal.cables,currents:state.nominal.currents,fixed:state.fixed},operation:{V:n("live-v"),targets:Object.fromEntries(ids.map(id=>[id,n("target-"+id)])),rheostats:Object.fromEntries(ids.map(id=>[id,n("reo-"+id)])),rheostatMax:n("reo-max"),tolerancePercent:n("tolerance")},results:state.op}}
