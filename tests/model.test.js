@@ -30,6 +30,14 @@ for(const id of model.IDS)assert.ok(Math.abs(adjusted.currents[id]-targets[id])<
 const nominalAdjustment=model.adjust({...cables,fixed:nominal.fixed,targets:currents,maxReo:100});
 assert.ok(Math.abs(nominalAdjustment.V-24)<1e-12);
 for(const id of model.IDS)assert.equal(nominalAdjustment.rheostats[id],0,`reóstato nominal ${id}`);
+const fieldCables={Rc1:.8,Rc2:1.67,Rc3:1.67,Rc4:1.67,Rc5:1.67};
+const fieldFixed={11:15,12:36,21:30.03,22:40,31:35.04,32:25.04,41:10.04,42:35.14,51:7.05,52:6.04};
+const fieldTargets={11:.5,12:.471,21:.5,22:.5,31:.5,32:.5,41:.5,42:.5,51:.5,52:.5};
+const fieldAdjustment=model.adjust({...fieldCables,fixed:fieldFixed,targets:fieldTargets,maxReo:100});
+assert.ok(Math.abs(fieldAdjustment.V-36.5768)<1e-12,"tensión mínima del caso probado en campo");
+assert.equal(fieldAdjustment.rheostats[42],0,"Reo42 debe ser la referencia en cero");
+const fieldOperating=model.simulate({V:fieldAdjustment.V,...fieldCables,fixed:fieldFixed,rheostats:fieldAdjustment.rheostats});
+for(const id of model.IDS)assert.ok(Math.abs(fieldOperating.currents[id]-fieldTargets[id])<1e-12,`objetivo de campo ${id}`);
 const increased={...zeroReostats,11:10};
 const throttled=model.simulate({V:24,...cables,fixed:nominal.fixed,rheostats:increased});
 assert.ok(throttled.currents["11"]<operating.currents["11"],"al aumentar Reo11 debe disminuir I11");
